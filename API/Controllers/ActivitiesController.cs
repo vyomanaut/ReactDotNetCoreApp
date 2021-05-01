@@ -1,4 +1,6 @@
-﻿using Domain;
+﻿using Application.Activities;
+using Domain;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,22 +14,35 @@ namespace API.Controllers
 {
     public class ActivitiesController : BaseApiController
     {
-        private readonly DataContext _context;
-        public ActivitiesController(DataContext context)
-        {
-            _context = context;
-        }
-
         [HttpGet]
         public async Task<ActionResult<List<Activity>>> GetActivities()
         {
-            return await _context.Activities.ToListAsync();
+            return await Mediator.Send(new List.Query());
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Activity>> GetActivity(Guid id)
         {
-            return await _context.Activities.FindAsync(id);
+            return await Mediator.Send(new Details.Query { Id = id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateActivity(Activity Activity)
+        {
+            return Ok(await Mediator.Send(new Create.Command { activity = Activity }));
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditActivity(Guid id,Activity Activity)
+        {
+            Activity.Id = id;
+            return Ok(await Mediator.Send(new Edit.Command { activity = Activity }));
+        }
+
+        [HttpDelete("{Id}")]
+        public async Task<IActionResult> DeleteActivity(Guid Id)
+        {
+            return Ok(await Mediator.Send(new Delete.Command { Id=Id }));
         }
     }
 }
